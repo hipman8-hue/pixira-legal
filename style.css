@@ -8,6 +8,7 @@
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
+html { scroll-behavior: smooth; }
 body {
   margin: 0;
   background: var(--bg);
@@ -37,9 +38,61 @@ li { margin: 5px 0; }
 .divider { height: 1px; background: var(--line); border: 0; margin: 40px 0; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+a:focus-visible { outline: 3px solid rgba(180, 84, 31, 0.35); outline-offset: 3px; border-radius: 4px; }
 nav.links { margin-top: 10px; font-size: 15px; }
 nav.links a { margin-right: 16px; }
 footer.site { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line);
   color: var(--muted); font-size: 13.5px; }
 .lang-label { display: inline-block; font-size: 12px; font-weight: 700; color: var(--accent);
   border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; margin: 30px 0 0; }
+.language-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 28px 0 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+.language-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  line-height: 1.25;
+  background: var(--bg);
+}
+.policy-language {
+  scroll-margin-top: 20px;
+  padding-top: 18px;
+  margin-top: 34px;
+  border-top: 1px solid var(--line);
+}
+.policy-language h2 {
+  color: var(--accent);
+  font-size: 23px;
+  text-transform: none;
+  letter-spacing: normal;
+  margin: 10px 0 4px;
+}
+.localized-meta {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+.back-to-languages { margin-top: 28px; font-size: 14px; }
+[dir="rtl"] { text-align: right; }
+[dir="rtl"] ul { padding-right: 20px; padding-left: 0; }
+@media (max-width: 480px) {
+  .wrap { padding: 24px 16px 64px; }
+  .tag { display: none; }
+  h1 { font-size: 25px; }
+  .language-nav { padding: 12px; gap: 6px; }
+  .language-nav a { flex: 1 1 auto; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
