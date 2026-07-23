@@ -40,8 +40,12 @@ and one localized “back to language list” link.
 
 ## Terms source of truth
 
-The Korean and English sections are the semantic master copies. Before
-translation, remove stale product claims from the current public page:
+The Korean section is the canonical legal copy. The English (United States)
+section is its controlled reference translation. A clause-by-clause bilingual
+parity check must pass before the English copy is used as the translation source
+for the other 27 locales.
+
+Before translation, remove stale product claims from the current public page:
 
 - do not state that there are six free cameras or promise a permanent
   “Classic pack” composition;
@@ -60,11 +64,16 @@ translation, remove stale product claims from the current public page:
 - refunds are handled under Apple's policies;
 - purchase restoration applies to eligible purchases associated with the same
   Apple Account;
-- the Apple Standard EULA applies because Pixira does not provide a custom
-  EULA.
+- Pixira's terms supplement the Apple license terms shown for the user's
+  storefront. Link to the Apple Standard EULA without making an enduring claim
+  about whether App Store Connect has a custom EULA configured.
 
 This wording remains accurate when App Store Connect prices, trials, or the
 catalog change.
+
+Because this is a material rewrite, the Terms effective date is 2026-07-23 in
+all 29 locales. Each localized section carries the same operator identity,
+contact email, and effective date.
 
 ## Support source of truth
 
@@ -75,7 +84,10 @@ Preserve the current factual FAQ scope:
 - microphone permission for video sound and Pro audio levels;
 - saving to Photos;
 - no Pixira account or login;
-- purchases and restoration through Apple App Store and StoreKit;
+- Pixira Pro monthly/yearly subscriptions and the lifetime unlock are processed
+  by the Apple App Store and StoreKit;
+- eligible Pixira Pro access can be restored through the in-app restore action,
+  and Pixira does not receive or store payment-card details;
 - no upload of captured media to Pixira-operated servers.
 
 Every localized support section links to its matching Privacy Policy locale and
@@ -85,9 +97,9 @@ the footer links to both Privacy Policy and Terms of Use.
 
 Reuse the current `.language-nav`, `.policy-language`, `.localized-meta`, and
 RTL CSS. Update generic class naming only if needed by both page types.
-Navigation targets must remain visible with a 44-point minimum touch target.
-The pages must remain usable at a 320 CSS-pixel viewport and with reduced
-motion enabled.
+Navigation links must have a computed minimum height of 44 CSS pixels. The
+pages must remain usable at a 320 CSS-pixel viewport. With
+`prefers-reduced-motion: reduce`, computed `scroll-behavior` must be `auto`.
 
 ## Verification
 
@@ -100,12 +112,30 @@ Before publication:
 3. Confirm every fragment target, `aria-labelledby` target, internal page link,
    stylesheet link, and `mailto:` link resolves.
 4. Confirm Arabic and Hebrew sections and navigation labels use RTL.
-5. Confirm stale claims (`3-day`, `3일`, `6 default`, `기본 6개`, and
+5. Confirm every locale has the same eight Terms headings, the same seven
+   purchase/subscription bullets, and the same seven Support topics. Review a
+   29-row clause matrix covering acceptance, Apple license terms, free-tier
+   quota, all three Pro products, dynamic trial eligibility/duration,
+   auto-renewal/cancellation, refund, restoration, user content, liability,
+   governing law, and contact. Reject any missing or contradictory clause.
+6. Confirm stale claims (`3-day`, `3일`, `6 default`, `기본 6개`, and
    `individual bodies`) are absent.
-6. Render desktop and 320-pixel mobile screenshots and inspect navigation,
+7. Confirm every Terms section carries the 2026-07-23 effective date and the
+   same operator/contact identity.
+8. Inspect the most recent available App Store Connect evidence for the
+   monthly, yearly, and lifetime product identifiers. Publication wording must
+   remain dynamic for any live value that cannot be proven, including trial
+   availability, trial length, price, currency, and eligibility. Do not claim
+   that no custom EULA exists.
+9. Use computed styles to confirm 44 CSS-pixel language targets and
+   `scroll-behavior: auto` under reduced motion. Render desktop and 320-pixel
+   mobile screenshots and inspect navigation,
    wrapping, focus visibility, RTL layout, and footer links.
-7. Push the reviewed commit and confirm GitHub Pages serves the new commit and
-   all three public URLs return HTTP 200.
+10. Push the reviewed commit and confirm the Pages build reports `built`, the
+   remote `main` SHA equals the reviewed local SHA, and all canonical public
+   URLs return HTTP 200:
+   `https://hipman8-hue.github.io/pixira-legal/`,
+   `/privacy`, `/support`, and `/terms`.
 
 ## Translation quality boundary
 
