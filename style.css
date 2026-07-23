@@ -36,8 +36,15 @@ li { margin: 5px 0; }
 .meta { color: var(--muted); font-size: 14.5px; margin: 0 0 6px; }
 .meta strong { color: var(--ink); }
 .divider { height: 1px; background: var(--line); border: 0; margin: 40px 0; }
-a { color: var(--accent); text-decoration: none; }
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.16em;
+}
 a:hover { text-decoration: underline; }
+.brand,
+.language-nav a { text-decoration: none; }
 a:focus-visible { outline: 3px solid rgba(180, 84, 31, 0.35); outline-offset: 3px; border-radius: 4px; }
 nav.links { margin-top: 10px; font-size: 15px; }
 nav.links a { margin-right: 16px; }
