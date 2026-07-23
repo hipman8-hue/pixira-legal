@@ -54,15 +54,17 @@ FORBIDDEN_CUSTOM_EULA_PHRASES = {
 }
 CONTRADICTORY_NO_CARD_ASSERTIONS = {
     "English positive card/payment handling claim": re.compile(
-        r"\bPixira\s+(?:receives?|stores?|collects?|retains?)\b"
+        r"\b(?:Pixira|the\s+app|we)\s+"
+        r"(?:receives?|stores?|collects?|retains?|keeps?)\b"
         r".{0,60}\b(?:card|payment)\b",
         re.IGNORECASE,
     ),
     "Korean positive card/payment handling claim": re.compile(
-        r"Pixira(?:는|가)?[^.!?。！？]{0,60}(?:카드|결제)"
+        r"(?:Pixira|앱|당사|운영자)(?:는|은|가)?"
+        r"[^.!?。！？]{0,60}(?:카드|결제)"
         r"[^.!?。！？]{0,60}"
         r"(?:받습니다|받아요|받는다|수신합니다|수신한다|저장합니다|저장한다|"
-        r"보관합니다|보관한다|수집합니다|수집한다)"
+        r"보관합니다|보관한다|수집합니다|수집한다|유지합니다|유지한다)"
     ),
 }
 CSS_URL_FUNCTION_RE = re.compile(
@@ -159,6 +161,18 @@ RUNTIME_URL_ATTRIBUTES = {
     "source": ("src", "srcset"),
     "track": ("src",),
     "video": ("poster", "src"),
+}
+RUNTIME_LINK_RELS = {
+    "apple-touch-icon",
+    "dns-prefetch",
+    "icon",
+    "manifest",
+    "mask-icon",
+    "modulepreload",
+    "preconnect",
+    "prefetch",
+    "preload",
+    "stylesheet",
 }
 
 
@@ -412,9 +426,7 @@ def validate_document_basics(
         runtime_attrs = list(RUNTIME_URL_ATTRIBUTES.get(node.tag, ()))
         if node.tag == "link":
             rel = class_tokens(node.attrs.get("rel", "").casefold())
-            if rel.intersection(
-                {"stylesheet", "preload", "prefetch", "modulepreload", "icon"}
-            ):
+            if rel.intersection(RUNTIME_LINK_RELS):
                 runtime_attrs.append("href")
         for attr in runtime_attrs:
             value = node.attrs.get(attr, "")
@@ -431,6 +443,34 @@ def validate_document_basics(
                     page,
                     f'non-local runtime resource is prohibited: <{node.tag} {attr}="{value}">',
                 )
+
+        if node.tag == "link":
+            rel = class_tokens(node.attrs.get("rel", "").casefold())
+            href = node.attrs.get("href", "")
+            parsed_href = urlparse(href)
+            if (
+                "stylesheet" in rel
+                and href
+                and not parsed_href.scheme
+                and not href.startswith("//")
+            ):
+                stylesheet_path = resolve_local_path(page.path, parsed_href.path)
+                if stylesheet_path is not None:
+                    try:
+                        stylesheet = stylesheet_path.read_text(encoding="utf-8")
+                    except (OSError, UnicodeDecodeError):
+                        add_error(
+                            errors,
+                            page,
+                            f'local stylesheet cannot be read as UTF-8: "{href}"',
+                        )
+                    else:
+                        for runtime_url in prohibited_css_runtime_urls(stylesheet):
+                            add_error(
+                                errors,
+                                page,
+                                f'linked stylesheet "{href}" contains prohibited non-local CSS runtime resource: "{runtime_url}"',
+                            )
 
     for node in page.nodes:
         href = node.attrs.get("href")
