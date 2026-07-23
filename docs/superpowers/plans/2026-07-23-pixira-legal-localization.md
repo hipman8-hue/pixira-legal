@@ -29,7 +29,7 @@
 - Test: `support.html`
 - Test: `terms.html`
 
-- [ ] **Step 1: Write a standard-library verifier**
+- [x] **Step 1: Write a standard-library verifier**
 
 The verifier must parse each page with `html.parser`, extract `.language-nav`
 fragment links and `.policy-language` section IDs, and fail unless Support and
@@ -42,9 +42,11 @@ disclosure, and stale claim absence. It must also reject `<script>`,
 meta-refresh redirects, external runtime resources, missing locale-matched
 `privacy#lang-<locale>` Support links, and a missing Apple Standard EULA link in
 each Terms locale. It must reject Korean/English claims that either a custom
-EULA exists or no custom EULA exists.
+EULA exists or no custom EULA exists. A `--page support` or `--page terms`
+mode must run only the selected page's contract; the default mode validates
+both.
 
-- [ ] **Step 2: Run the verifier and confirm RED**
+- [x] **Step 2: Run the verifier and confirm RED**
 
 Run:
 
@@ -55,7 +57,7 @@ python3 scripts/check_localizations.py
 Expected: nonzero exit because `support.html` and `terms.html` have only Korean
 and English sections.
 
-- [ ] **Step 3: Commit the failing contract**
+- [x] **Step 3: Commit the failing contract**
 
 ```bash
 git add scripts/check_localizations.py
@@ -87,10 +89,11 @@ must link to both `privacy` and `terms`.
 Run:
 
 ```bash
-python3 scripts/check_localizations.py
+python3 scripts/check_localizations.py --page support
 ```
 
-Expected: Support-specific checks pass; command still fails because Terms has
+Expected: exit 0 with 29 Support navigation links and 29 Support sections.
+Then run the default command and confirm it still fails only because Terms has
 not yet been localized.
 
 - [ ] **Step 4: Commit Support**
