@@ -68,8 +68,9 @@ Before translation, remove stale product claims from the current public page:
   storefront. Link to the Apple Standard EULA without making an enduring claim
   about whether App Store Connect has a custom EULA configured.
 
-This wording remains accurate when App Store Connect prices, trials, or the
-catalog change.
+Dynamic wording remains accurate when App Store Connect prices or trials
+change. The Terms must be reviewed whenever the free-tier quota, catalog access,
+or sellable product set changes.
 
 Because this is a material rewrite, the Terms effective date is 2026-07-23 in
 all 29 locales. Each localized section carries the same operator identity,
@@ -97,7 +98,7 @@ the footer links to both Privacy Policy and Terms of Use.
 
 Reuse the current `.language-nav`, `.policy-language`, `.localized-meta`, and
 RTL CSS. Update generic class naming only if needed by both page types.
-Navigation links must have a computed minimum height of 44 CSS pixels. The
+Navigation links must have a computed minimum size of 44×44 CSS pixels. The
 pages must remain usable at a 320 CSS-pixel viewport. With
 `prefers-reduced-motion: reduce`, computed `scroll-behavior` must be `auto`.
 
@@ -127,7 +128,7 @@ Before publication:
    remain dynamic for any live value that cannot be proven, including trial
    availability, trial length, price, currency, and eligibility. Do not claim
    that no custom EULA exists.
-9. Use computed styles to confirm 44 CSS-pixel language targets and
+9. Use computed styles to confirm 44×44 CSS-pixel language targets and
    `scroll-behavior: auto` under reduced motion. Render desktop and 320-pixel
    mobile screenshots and inspect navigation,
    wrapping, focus visibility, RTL layout, and footer links.
@@ -135,12 +136,15 @@ Before publication:
    remote `main` SHA equals the reviewed local SHA, and all canonical public
    URLs return HTTP 200:
    `https://hipman8-hue.github.io/pixira-legal/`,
-   `/privacy`, `/support`, and `/terms`.
+   `https://hipman8-hue.github.io/pixira-legal/privacy`,
+   `https://hipman8-hue.github.io/pixira-legal/support`, and
+   `https://hipman8-hue.github.io/pixira-legal/terms`.
 
 ## Translation quality boundary
 
 The translations must preserve the Korean/English meaning and Apple product
 names. They are product-localization drafts, not jurisdiction-specific legal
 advice. A qualified native legal reviewer remains appropriate before using a
-translation as a locally negotiated custom EULA; Pixira currently relies on
-Apple's Standard EULA.
+translation as a locally negotiated custom EULA. The page must point users to
+the Apple license terms applicable to their storefront without claiming which
+license configuration is currently active in App Store Connect.
