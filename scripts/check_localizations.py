@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from html.parser import HTMLParser
@@ -76,6 +77,9 @@ NO_CARD_CONTRACT_KEY = (
     "pixira-does-not-receive-or-store-payment-card-details"
 )
 RESTORE_ACTION_CONTRACT = "in-app-restore-action"
+RESTORE_ACTION_LABEL_SOURCE = (
+    "/Users/mac/Documents/secondcam/SecondCam/Resources/Localizable.xcstrings"
+)
 VOID_ELEMENTS = {
     "area",
     "base",
@@ -712,8 +716,63 @@ def metadata_value_after_strong(meta: Node, strong_index: int) -> str | None:
     return normalized(" ".join(parts)).strip(" ·")
 
 
-def validate_support(
+def load_restore_action_labels(
     page: Page, expected_locales: list[str], errors: list[str]
+) -> dict[str, str]:
+    manifest_path = ROOT / "contracts" / "restore_action_labels.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        add_error(
+            errors,
+            page,
+            f"restore-action-label manifest cannot be loaded: {error}",
+        )
+        return {}
+
+    if not isinstance(manifest, dict):
+        add_error(errors, page, "restore-action-label manifest must be an object")
+        return {}
+    if manifest.get("_source") != RESTORE_ACTION_LABEL_SOURCE:
+        add_error(
+            errors,
+            page,
+            "restore-action-label manifest has an unexpected _source",
+        )
+
+    labels = manifest.get("labels")
+    if not isinstance(labels, dict):
+        add_error(
+            errors,
+            page,
+            "restore-action-label manifest must contain a labels object",
+        )
+        return {}
+    if set(labels) != set(expected_locales):
+        add_error(
+            errors,
+            page,
+            "restore-action-label manifest locale keys must exactly match Privacy",
+        )
+
+    valid_labels: dict[str, str] = {}
+    for locale, label in labels.items():
+        if isinstance(label, str) and normalized(label):
+            valid_labels[locale] = normalized(label)
+        else:
+            add_error(
+                errors,
+                page,
+                f"{locale} restore-action-label manifest value must be non-empty text",
+            )
+    return valid_labels
+
+
+def validate_support(
+    page: Page,
+    expected_locales: list[str],
+    restore_action_labels: dict[str, str],
+    errors: list[str],
 ) -> None:
     for locale in expected_locales:
         section = page.section_for_locale(locale)
@@ -764,6 +823,51 @@ def validate_support(
                 errors,
                 page,
                 f"{locale} no-card-storage disclosure contains a contradictory positive card/payment handling claim",
+            )
+
+        restore_label_spans = [
+            node
+            for node in section.descendants("span")
+            if node.attrs.get("data-contract") == "restore-action-label"
+        ]
+        disclosure_restore_spans = (
+            [
+                node
+                for node in disclosures[0].descendants("span")
+                if node.attrs.get("data-contract") == "restore-action-label"
+            ]
+            if len(disclosures) == 1
+            else []
+        )
+        expected_restore_label = restore_action_labels.get(locale)
+        restore_label_style = (
+            restore_label_spans[0]
+            .attrs.get("style", "")
+            .replace(" ", "")
+            .casefold()
+            if len(restore_label_spans) == 1
+            else ""
+        )
+        restore_label_is_visible = (
+            len(restore_label_spans) == 1
+            and "hidden" not in restore_label_spans[0].attrs
+            and restore_label_spans[0].attrs.get("aria-hidden", "").casefold()
+            != "true"
+            and "display:none" not in restore_label_style
+            and "visibility:hidden" not in restore_label_style
+        )
+        if (
+            len(restore_label_spans) != 1
+            or disclosure_restore_spans != restore_label_spans
+            or not restore_label_is_visible
+            or expected_restore_label is None
+            or restore_label_spans[0].text_content() != expected_restore_label
+        ):
+            add_error(
+                errors,
+                page,
+                f"{locale} Support purchase disclosure needs exactly one visible span "
+                'data-contract="restore-action-label" matching the canonical localized label',
             )
 
 
@@ -924,7 +1028,12 @@ def main() -> int:
         )
 
     if "support" in pages:
-        validate_support(pages["support"], expected_locales, errors)
+        restore_action_labels = load_restore_action_labels(
+            pages["support"], expected_locales, errors
+        )
+        validate_support(
+            pages["support"], expected_locales, restore_action_labels, errors
+        )
         validate_stale_claims(pages["support"], errors)
     if "terms" in pages:
         validate_terms(pages["terms"], privacy, expected_locales, errors)

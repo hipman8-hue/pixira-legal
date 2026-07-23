@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import sys
 import tempfile
 import unittest
@@ -14,6 +15,9 @@ import check_localizations as checker
 
 NO_CARD_KEY = "pixira-does-not-receive-or-store-payment-card-details"
 RESTORE_ACTION_KEY = "in-app-restore-action"
+RESTORE_LABEL_SOURCE = (
+    "/Users/mac/Documents/secondcam/SecondCam/Resources/Localizable.xcstrings"
+)
 
 
 class LocalizationCheckerTests(unittest.TestCase):
@@ -34,7 +38,23 @@ class LocalizationCheckerTests(unittest.TestCase):
             "ko": "privacy-canonical-back-ko",
             "en-US": "privacy-canonical-back-en",
         }
+        self.restore_labels = {
+            "ko": "구매 복원",
+            "en-US": "Restore Purchases",
+        }
         (self.root / "style.css").write_text("", encoding="utf-8")
+        contracts = self.root / "contracts"
+        contracts.mkdir()
+        (contracts / "restore_action_labels.json").write_text(
+            json.dumps(
+                {
+                    "_source": RESTORE_LABEL_SOURCE,
+                    "labels": self.restore_labels,
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
         self.write_valid_pages()
 
     def tearDown(self) -> None:
@@ -81,9 +101,11 @@ class LocalizationCheckerTests(unittest.TestCase):
         support_disclosure: str = "Localized disclosure copy.",
         support_marker: str = NO_CARD_KEY,
         support_restore_marker: str | None = RESTORE_ACTION_KEY,
+        support_restore_labels: dict[str, str] | None = None,
         terms_extra: dict[str, str] | None = None,
     ) -> None:
         terms_extra = terms_extra or {}
+        support_restore_labels = support_restore_labels or self.restore_labels
         privacy_sections: list[str] = []
         support_sections: list[str] = []
         terms_sections: list[str] = []
@@ -113,6 +135,9 @@ class LocalizationCheckerTests(unittest.TestCase):
                 + restore_attribute
                 + ">"
                 + support_disclosure
+                + '<span data-contract="restore-action-label">'
+                + support_restore_labels[locale]
+                + "</span>"
                 + "</p>"
                 + f'<a href="privacy#lang-{locale}">Privacy</a>'
                 + back_link
@@ -278,6 +303,21 @@ class LocalizationCheckerTests(unittest.TestCase):
         status, output = self.run_checker("support")
         self.assertEqual(status, 1)
         self.assertIn("data-restore-contract", output)
+
+    def test_support_rejects_wrong_english_or_mixed_restore_label(self) -> None:
+        mutations = (
+            "복원 구매",
+            "Restore Purchases",
+            "구매 복원 / Restore Purchases",
+        )
+        for mutated_label in mutations:
+            with self.subTest(mutated_label=mutated_label):
+                labels = dict(self.restore_labels)
+                labels["ko"] = mutated_label
+                self.write_valid_pages(support_restore_labels=labels)
+                status, output = self.run_checker("support")
+                self.assertEqual(status, 1)
+                self.assertIn("restore-action-label", output)
 
 
 if __name__ == "__main__":
