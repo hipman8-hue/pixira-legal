@@ -75,6 +75,7 @@ CSS_IMPORT_RE = re.compile(r"@import\s+([^;]+)", re.IGNORECASE | re.DOTALL)
 NO_CARD_CONTRACT_KEY = (
     "pixira-does-not-receive-or-store-payment-card-details"
 )
+RESTORE_ACTION_CONTRACT = "in-app-restore-action"
 VOID_ELEMENTS = {
     "area",
     "base",
@@ -747,11 +748,13 @@ def validate_support(
             len(disclosures) != 1
             or disclosures[0].attrs.get("data-contract-key")
             != NO_CARD_CONTRACT_KEY
+            or disclosures[0].attrs.get("data-restore-contract")
+            != RESTORE_ACTION_CONTRACT
         ):
             add_error(
                 errors,
                 page,
-                f'{locale} Support section needs one data-contract="no-card-storage" disclosure with data-contract-key="{NO_CARD_CONTRACT_KEY}"',
+                f'{locale} Support section needs one data-contract="no-card-storage" disclosure with data-contract-key="{NO_CARD_CONTRACT_KEY}" and data-restore-contract="{RESTORE_ACTION_CONTRACT}"',
             )
         elif any(
             pattern.search(disclosures[0].text_content())

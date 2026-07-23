@@ -13,6 +13,7 @@ import check_localizations as checker
 
 
 NO_CARD_KEY = "pixira-does-not-receive-or-store-payment-card-details"
+RESTORE_ACTION_KEY = "in-app-restore-action"
 
 
 class LocalizationCheckerTests(unittest.TestCase):
@@ -79,6 +80,7 @@ class LocalizationCheckerTests(unittest.TestCase):
         *,
         support_disclosure: str = "Localized disclosure copy.",
         support_marker: str = NO_CARD_KEY,
+        support_restore_marker: str | None = RESTORE_ACTION_KEY,
         terms_extra: dict[str, str] | None = None,
     ) -> None:
         terms_extra = terms_extra or {}
@@ -98,11 +100,18 @@ class LocalizationCheckerTests(unittest.TestCase):
                 + "</section>"
             )
             topics = "".join(f"<h3>Topic {index}</h3>" for index in range(7))
+            restore_attribute = (
+                f' data-restore-contract="{support_restore_marker}"'
+                if support_restore_marker is not None
+                else ""
+            )
             support_sections.append(
                 self.section_start(locale)
                 + topics
                 + '<p data-contract="no-card-storage" '
-                + f'data-contract-key="{support_marker}">'
+                + f'data-contract-key="{support_marker}"'
+                + restore_attribute
+                + ">"
                 + support_disclosure
                 + "</p>"
                 + f'<a href="privacy#lang-{locale}">Privacy</a>'
@@ -263,6 +272,12 @@ class LocalizationCheckerTests(unittest.TestCase):
         status, output = self.run_checker("support")
         self.assertEqual(status, 1)
         self.assertIn("data-contract-key", output)
+
+    def test_support_requires_in_app_restore_action_contract(self) -> None:
+        self.write_valid_pages(support_restore_marker=None)
+        status, output = self.run_checker("support")
+        self.assertEqual(status, 1)
+        self.assertIn("data-restore-contract", output)
 
 
 if __name__ == "__main__":
