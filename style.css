@@ -45,7 +45,7 @@ a {
 a:hover { text-decoration: underline; }
 .brand,
 .language-nav a { text-decoration: none; }
-a:focus-visible { outline: 3px solid rgba(180, 84, 31, 0.35); outline-offset: 3px; border-radius: 4px; }
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
 nav.links { margin-top: 10px; font-size: 15px; }
 nav.links a { margin-right: 16px; }
 footer.site { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line);
