@@ -248,7 +248,7 @@ git commit -m "fix: resolve legal localization review"
 
 Create the commit only when review produces changes.
 
-- [ ] **Step 7: Push and verify GitHub Pages**
+- [x] **Step 7: Push and verify GitHub Pages**
 
 Push the reviewed feature branch, fast-forward `main` only after final release
 review, then confirm remote `main` SHA, GitHub Pages build state `built`, and
