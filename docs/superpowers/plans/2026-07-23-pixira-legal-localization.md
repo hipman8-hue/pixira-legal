@@ -112,7 +112,7 @@ git commit -m "feat: localize Pixira support in 29 languages"
 - Create: `docs/reviews/2026-07-23-localization-clause-matrix.md`
 - Test: `scripts/check_localizations.py`
 
-- [ ] **Step 1: Inspect current App Store Connect evidence**
+- [x] **Step 1: Inspect current App Store Connect evidence**
 
 Inspect the newest available evidence for `com.pixira.pro.monthly`,
 `com.pixira.pro.yearly`, and `com.pixira.pro.lifetime` before freezing the
@@ -120,7 +120,7 @@ source copy. Record the evidence path/date and proven product types in the
 clause-matrix document. Keep price, currency, trial, eligibility, and custom
 EULA wording dynamic where current live evidence is unavailable.
 
-- [ ] **Step 2: Correct the Korean canonical copy**
+- [x] **Step 2: Correct the Korean canonical copy**
 
 Set the effective date to 2026-07-23. Remove the stale six-camera/Classic-pack,
 three-day-trial, premium-content, individual-body, same-price renewal, and
@@ -133,25 +133,25 @@ license terms. Each locale must link to
 `https://www.apple.com/legal/internet-services/itunes/dev/stdeula/`.
 The copy must remain neutral about whether a custom EULA is configured.
 
-- [ ] **Step 3: Create the controlled English (US) parity copy**
+- [x] **Step 3: Create the controlled English (US) parity copy**
 
 Match every heading and purchase/subscription bullet clause-for-clause with the
 Korean canonical copy.
 
-- [ ] **Step 4: Run the Korean/English parity gate**
+- [x] **Step 4: Run the Korean/English parity gate**
 
 Run a clause matrix over the Korean and English sections and confirm each of the
 eight headings, seven purchase/subscription bullets, and all semantic items in
 the design spec appear once without contradiction. Do not use English as the
 translation source until this gate passes.
 
-- [ ] **Step 5: Add the other 27 locale sections**
+- [x] **Step 5: Add the other 27 locale sections**
 
 Use the exact locale order, IDs, headings, metadata, and RTL behavior defined by
 Privacy. Every locale must preserve all eight headings and seven
 purchase/subscription bullets.
 
-- [ ] **Step 6: Complete the reproducible semantic matrix**
+- [x] **Step 6: Complete the reproducible semantic matrix**
 
 Create one row per locale with a checkbox and exact section/paragraph pointer
 for acceptance, Apple license terms, free quota, monthly/yearly/lifetime
@@ -163,7 +163,7 @@ that English source. A reviewer must mark each row PASS only after checking the
 localized text against the clause mapping; any missing or contradictory item is
 FAIL and blocks publication.
 
-- [ ] **Step 7: Run the full verifier**
+- [x] **Step 7: Run the full verifier**
 
 Run:
 
@@ -174,7 +174,7 @@ python3 scripts/check_localizations.py
 Expected: exit 0 with 29 navigation links and 29 sections for Privacy, Support,
 and Terms; no stale claims.
 
-- [ ] **Step 8: Commit Terms and semantic evidence**
+- [x] **Step 8: Commit Terms and semantic evidence**
 
 ```bash
 git add terms.html docs/reviews/2026-07-23-localization-clause-matrix.md
