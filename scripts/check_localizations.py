@@ -46,41 +46,30 @@ STALE_CLAIMS = {
         r"(?:동일\s*가격.{0,40}(?:자동\s*)?갱신|(?:자동\s*)?갱신.{0,40}동일\s*가격)"
     ),
 }
-CUSTOM_EULA_ASSERTIONS = {
-    "Korean no-custom-EULA assertion": re.compile(
-        r"(?:(?:커스텀|사용자\s*지정)\s*EULA.{0,30}"
-        r"(?:없|존재하지\s*않|설정되지\s*않|제공되지\s*않|사용되지\s*않)"
-        r"|(?:없|제공하지\s*않|사용하지\s*않).{0,30}"
-        r"(?:커스텀|사용자\s*지정)\s*EULA)",
-        re.IGNORECASE | re.DOTALL,
-    ),
-    "Korean custom-EULA-exists assertion": re.compile(
-        r"(?:커스텀|사용자\s*지정)\s*EULA.{0,30}"
-        r"(?:있|적용|설정|활성|제공|사용)",
-        re.IGNORECASE | re.DOTALL,
-    ),
-    "English no-custom-EULA assertion": re.compile(
-        r"(?:(?:no|without|do(?:es)?\s+not\s+(?:provide|have|use))"
-        r".{0,30}custom\s+EULA"
-        r"|custom\s+EULA\s+(?:does\s+not\s+exist|is\s+not\s+"
-        r"(?:configured|active|provided|used)))",
-        re.IGNORECASE | re.DOTALL,
-    ),
-    "English custom-EULA-exists assertion": re.compile(
-        r"(?:(?:has|provides|uses)\s+(?:a\s+)?custom\s+EULA"
-        r"|custom\s+EULA\s+(?:exists|applies|is\s+"
-        r"(?:configured|active|provided|used)))",
-        re.IGNORECASE | re.DOTALL,
+FORBIDDEN_CUSTOM_EULA_PHRASES = {
+    "English custom EULA phrase": re.compile(r"\bcustom\s+EULA\b", re.IGNORECASE),
+    "Korean custom EULA phrase": re.compile(
+        r"(?:커스텀|사용자\s*지정)\s*EULA", re.IGNORECASE
     ),
 }
-NEUTRAL_CUSTOM_EULA_QUALIFIERS = (
-    re.compile(
-        r"\b(?:whether|unknown|cannot\s+confirm|depends?\s+on|"
-        r"configuration[\s-]*dependent|may\s+vary)\b",
+CONTRADICTORY_NO_CARD_ASSERTIONS = {
+    "English positive card/payment handling claim": re.compile(
+        r"\bPixira\s+(?:receives?|stores?|collects?|retains?)\b"
+        r".{0,60}\b(?:card|payment)\b",
         re.IGNORECASE,
     ),
-    re.compile(r"(?:여부|알\s*수\s*없|확인할\s*수\s*없|구성에\s*따라|설정에\s*따라|달라질\s*수)"),
+    "Korean positive card/payment handling claim": re.compile(
+        r"Pixira(?:는|가)?[^.!?。！？]{0,60}(?:카드|결제)"
+        r"[^.!?。！？]{0,60}"
+        r"(?:받습니다|받아요|받는다|수신합니다|수신한다|저장합니다|저장한다|"
+        r"보관합니다|보관한다|수집합니다|수집한다)"
+    ),
+}
+CSS_URL_FUNCTION_RE = re.compile(
+    r"url\s*\(\s*(?:([\"'])(.*?)\1|([^)]*?))\s*\)",
+    re.IGNORECASE | re.DOTALL,
 )
+CSS_IMPORT_RE = re.compile(r"@import\s+([^;]+)", re.IGNORECASE | re.DOTALL)
 BACK_TO_LANGUAGE_LIST_COPY = {
     "ko": "언어 목록으로",
     "en-US": "Back to language list",
@@ -329,6 +318,53 @@ def is_prohibited_runtime_url(tag: str, attr: str, value: str) -> bool:
     return True
 
 
+def css_url_value(raw_value: str) -> str:
+    value = raw_value.strip()
+    if (
+        len(value) >= 2
+        and value[0] in {'"', "'"}
+        and value[-1] == value[0]
+    ):
+        return value[1:-1].strip()
+    return value
+
+
+def is_prohibited_css_url(value: str, *, allow_data_image: bool) -> bool:
+    if value.startswith("//"):
+        return True
+    scheme = urlparse(value).scheme.casefold()
+    if not scheme:
+        return False
+    if (
+        scheme == "data"
+        and allow_data_image
+        and value.casefold().startswith("data:image/")
+    ):
+        return False
+    return True
+
+
+def prohibited_css_runtime_urls(css: str) -> list[str]:
+    prohibited: list[str] = []
+
+    for match in CSS_IMPORT_RE.finditer(css):
+        import_target = match.group(1).strip()
+        url_match = CSS_URL_FUNCTION_RE.search(import_target)
+        if url_match:
+            value = css_url_value(url_match.group(2) or url_match.group(3) or "")
+        else:
+            value = css_url_value(import_target.split()[0])
+        if value and is_prohibited_css_url(value, allow_data_image=False):
+            prohibited.append(value)
+
+    for match in CSS_URL_FUNCTION_RE.finditer(css):
+        value = css_url_value(match.group(2) or match.group(3) or "")
+        if value and is_prohibited_css_url(value, allow_data_image=True):
+            prohibited.append(value)
+
+    return list(dict.fromkeys(prohibited))
+
+
 def validate_document_basics(
     page: Page, pages_by_path: dict[Path, Page], errors: list[str]
 ) -> None:
@@ -355,6 +391,19 @@ def validate_document_basics(
         add_error(errors, page, "<script> is prohibited")
 
     for node in page.nodes:
+        css_sources: list[tuple[str, str]] = []
+        if node.tag == "style":
+            css_sources.append(("<style>", node.text_content()))
+        if "style" in node.attrs:
+            css_sources.append((f"<{node.tag} style>", node.attrs["style"]))
+        for source, css in css_sources:
+            for runtime_url in prohibited_css_runtime_urls(css):
+                add_error(
+                    errors,
+                    page,
+                    f'non-local CSS runtime resource is prohibited in {source}: "{runtime_url}"',
+                )
+
         if node.tag == "meta":
             http_equiv = node.attrs.get("http-equiv", "").casefold()
             if http_equiv in {"refresh", "set-cookie"}:
@@ -580,6 +629,15 @@ def validate_support(
                 page,
                 f'{locale} Support section needs one localized data-contract="no-card-storage" disclosure stating that Pixira does not receive or store card/payment details',
             )
+        elif any(
+            pattern.search(disclosures[0].text_content())
+            for pattern in CONTRADICTORY_NO_CARD_ASSERTIONS.values()
+        ):
+            add_error(
+                errors,
+                page,
+                f"{locale} no-card-storage disclosure contains a contradictory positive card/payment handling claim",
+            )
 
 
 def validate_terms_metadata(
@@ -687,13 +745,10 @@ def validate_terms(
     )
     for locale, scope in assertion_scopes.items():
         assert scope is not None
-        sentences = re.split(r"(?<=[.!?。！？])|\n+", scope.text_content())
-        for sentence in sentences:
-            if any(pattern.search(sentence) for pattern in NEUTRAL_CUSTOM_EULA_QUALIFIERS):
-                continue
-            for label, pattern in CUSTOM_EULA_ASSERTIONS.items():
-                if pattern.search(sentence):
-                    add_error(errors, page, f"{locale} contains {label}")
+        text = scope.text_content()
+        for label, pattern in FORBIDDEN_CUSTOM_EULA_PHRASES.items():
+            if pattern.search(text):
+                add_error(errors, page, f"{locale} contains {label}")
 
 
 def validate_stale_claims(page: Page, errors: list[str]) -> None:
