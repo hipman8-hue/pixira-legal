@@ -67,6 +67,7 @@ footer.site { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--l
 }
 .policy-language {
   scroll-margin-top: 20px;
+  overflow-wrap: anywhere;
   padding-top: 18px;
   margin-top: 34px;
   border-top: 1px solid var(--line);
