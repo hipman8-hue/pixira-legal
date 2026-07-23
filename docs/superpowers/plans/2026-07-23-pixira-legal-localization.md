@@ -71,7 +71,7 @@ git commit -m "test: define legal locale contract"
 - Modify: `style.css` only if the existing shared classes do not meet the measurable contract
 - Test: `scripts/check_localizations.py`
 
-- [ ] **Step 1: Replace the bilingual layout with the 29-locale structure**
+- [x] **Step 1: Replace the bilingual layout with the 29-locale structure**
 
 Copy the ordered navigation contract from `privacy.html`. Add exactly seven
 localized topics per section: contact, camera permission, microphone
@@ -79,12 +79,12 @@ permission, Photos saving, account/login, the three current Pixira Pro
 products/restoration, and server upload behavior. Do not refer to separately
 purchasable premium bodies.
 
-- [ ] **Step 2: Link each locale to matching legal fragments**
+- [x] **Step 2: Link each locale to matching legal fragments**
 
 Each support section must link to `privacy#lang-<locale>` and the page footer
 must link to both `privacy` and `terms`.
 
-- [ ] **Step 3: Run the verifier**
+- [x] **Step 3: Run the verifier**
 
 Run:
 
@@ -96,7 +96,7 @@ Expected: exit 0 with 29 Support navigation links and 29 Support sections.
 Then run the default command and confirm it still fails only because Terms has
 not yet been localized.
 
-- [ ] **Step 4: Commit Support**
+- [x] **Step 4: Commit Support**
 
 ```bash
 git add support.html style.css
