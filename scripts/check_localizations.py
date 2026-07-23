@@ -33,10 +33,25 @@ STALE_CLAIMS = {
     "기본 6개": re.compile(r"기본\s*6\s*개"),
     "individual bodies": re.compile(r"\bindividual\s+bodies\b", re.IGNORECASE),
     "개별 바디": re.compile(r"개별\s*바디"),
+    "Classic pack": re.compile(r"\bclassic\s+pack\b", re.IGNORECASE),
+    "클래식 팩": re.compile(r"클래식\s*팩"),
+    "premium content": re.compile(r"\bpremium\s+content\b", re.IGNORECASE),
+    "프리미엄 콘텐츠": re.compile(r"프리미엄\s*콘텐츠"),
+    "same-price renewal": re.compile(
+        r"(?:\b(?:auto(?:matically)?[\s-]*)?renew\w*\b.{0,60}\bsame\s+price\b"
+        r"|\bsame\s+price\b.{0,60}\b(?:auto(?:matically)?[\s-]*)?renew\w*\b)",
+        re.IGNORECASE,
+    ),
+    "동일 가격 자동갱신": re.compile(
+        r"(?:동일\s*가격.{0,40}(?:자동\s*)?갱신|(?:자동\s*)?갱신.{0,40}동일\s*가격)"
+    ),
 }
 CUSTOM_EULA_ASSERTIONS = {
     "Korean no-custom-EULA assertion": re.compile(
-        r"(?:커스텀|사용자\s*지정)\s*EULA.{0,30}(?:없|제공하지\s*않)",
+        r"(?:(?:커스텀|사용자\s*지정)\s*EULA.{0,30}"
+        r"(?:없|존재하지\s*않|설정되지\s*않|제공되지\s*않|사용되지\s*않)"
+        r"|(?:없|제공하지\s*않|사용하지\s*않).{0,30}"
+        r"(?:커스텀|사용자\s*지정)\s*EULA)",
         re.IGNORECASE | re.DOTALL,
     ),
     "Korean custom-EULA-exists assertion": re.compile(
@@ -45,8 +60,10 @@ CUSTOM_EULA_ASSERTIONS = {
         re.IGNORECASE | re.DOTALL,
     ),
     "English no-custom-EULA assertion": re.compile(
-        r"(?:no|without|do(?:es)?\s+not\s+(?:provide|have))"
-        r".{0,30}custom\s+EULA",
+        r"(?:(?:no|without|do(?:es)?\s+not\s+(?:provide|have|use))"
+        r".{0,30}custom\s+EULA"
+        r"|custom\s+EULA\s+(?:does\s+not\s+exist|is\s+not\s+"
+        r"(?:configured|active|provided|used)))",
         re.IGNORECASE | re.DOTALL,
     ),
     "English custom-EULA-exists assertion": re.compile(
@@ -55,6 +72,76 @@ CUSTOM_EULA_ASSERTIONS = {
         r"(?:configured|active|provided|used)))",
         re.IGNORECASE | re.DOTALL,
     ),
+}
+NEUTRAL_CUSTOM_EULA_QUALIFIERS = (
+    re.compile(
+        r"\b(?:whether|unknown|cannot\s+confirm|depends?\s+on|"
+        r"configuration[\s-]*dependent|may\s+vary)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"(?:여부|알\s*수\s*없|확인할\s*수\s*없|구성에\s*따라|설정에\s*따라|달라질\s*수)"),
+)
+BACK_TO_LANGUAGE_LIST_COPY = {
+    "ko": "언어 목록으로",
+    "en-US": "Back to language list",
+    "el": "Επιστροφή στη λίστα γλωσσών",
+    "nl": "Terug naar de talenlijst",
+    "nb": "Tilbake til språklisten",
+    "da": "Tilbage til sproglisten",
+    "de": "Zurück zur Sprachenliste",
+    "ru": "Вернуться к списку языков",
+    "ro": "Înapoi la lista limbilor",
+    "ms": "Kembali ke senarai bahasa",
+    "vi": "Quay lại danh sách ngôn ngữ",
+    "sv": "Tillbaka till språklistan",
+    "es-MX": "Volver a la lista de idiomas",
+    "ar": "العودة إلى قائمة اللغات",
+    "uk": "Повернутися до списку мов",
+    "it": "Torna all'elenco delle lingue",
+    "id": "Kembali ke daftar bahasa",
+    "ja": "言語一覧に戻る",
+    "zh-Hans": "返回语言列表",
+    "cs": "Zpět na seznam jazyků",
+    "th": "กลับไปยังรายการภาษา",
+    "tr": "Dil listesine dön",
+    "pt-BR": "Voltar à lista de idiomas",
+    "pl": "Wróć do listy języków",
+    "fr-FR": "Revenir à la liste des langues",
+    "fi": "Takaisin kieliluetteloon",
+    "hu": "Vissza a nyelvek listájához",
+    "he": "חזרה לרשימת השפות",
+    "hi": "भाषा सूची पर वापस जाएं",
+}
+NO_CARD_DISCLOSURE_COPY = {
+    "ko": "Pixira는 카드 번호나 결제 수단 정보를 받거나 저장하지 않습니다.",
+    "en-US": "Pixira does not receive or store card numbers or payment-method details.",
+    "el": "Το Pixira δεν λαμβάνει ούτε αποθηκεύει αριθμούς καρτών ή στοιχεία μεθόδου πληρωμής.",
+    "nl": "Pixira ontvangt of bewaart geen kaartnummers of betaalmethodegegevens.",
+    "nb": "Pixira mottar eller lagrer ikke kortnumre eller opplysninger om betalingsmåter.",
+    "da": "Pixira modtager eller gemmer ikke kortnumre eller oplysninger om betalingsmetoder.",
+    "de": "Pixira erhält oder speichert keine Kartennummern oder Angaben zu Zahlungsmethoden.",
+    "ru": "Pixira не получает и не хранит номера карт или сведения о способах оплаты.",
+    "ro": "Pixira nu primește și nu stochează numere de card sau detalii despre metodele de plată.",
+    "ms": "Pixira tidak menerima atau menyimpan nombor kad atau butiran kaedah pembayaran.",
+    "vi": "Pixira không nhận hoặc lưu trữ số thẻ hay thông tin phương thức thanh toán.",
+    "sv": "Pixira tar inte emot eller lagrar kortnummer eller uppgifter om betalningsmetoder.",
+    "es-MX": "Pixira no recibe ni almacena números de tarjeta ni detalles del método de pago.",
+    "ar": "لا يتلقى Pixira أرقام البطاقات أو تفاصيل طرق الدفع ولا يخزنها.",
+    "uk": "Pixira не отримує та не зберігає номери карток або відомості про способи оплати.",
+    "it": "Pixira non riceve né memorizza numeri di carta o dettagli dei metodi di pagamento.",
+    "id": "Pixira tidak menerima atau menyimpan nomor kartu maupun detail metode pembayaran.",
+    "ja": "Pixiraはカード番号や支払方法の詳細を受信または保存しません。",
+    "zh-Hans": "Pixira 不会接收或存储银行卡号或付款方式详情。",
+    "cs": "Pixira nepřijímá ani neukládá čísla karet ani údaje o platebních metodách.",
+    "th": "Pixira ไม่ได้รับหรือจัดเก็บหมายเลขบัตรหรือรายละเอียดวิธีการชำระเงิน",
+    "tr": "Pixira kart numaralarını veya ödeme yöntemi ayrıntılarını almaz ya da saklamaz.",
+    "pt-BR": "A Pixira não recebe nem armazena números de cartão ou detalhes da forma de pagamento.",
+    "pl": "Pixira nie otrzymuje ani nie przechowuje numerów kart ani danych metod płatności.",
+    "fr-FR": "Pixira ne reçoit ni ne stocke les numéros de carte ni les informations sur les moyens de paiement.",
+    "fi": "Pixira ei vastaanota eikä tallenna korttinumeroita tai maksutapatietoja.",
+    "hu": "A Pixira nem fogad és nem tárol kártyaszámokat vagy fizetésimód-adatokat.",
+    "he": "Pixira אינה מקבלת או שומרת מספרי כרטיסים או פרטי אמצעי תשלום.",
+    "hi": "Pixira कार्ड नंबर या भुगतान विधि का विवरण प्राप्त या संग्रहीत नहीं करता है।",
 }
 VOID_ELEMENTS = {
     "area",
@@ -226,9 +313,20 @@ def resolve_local_path(current: Path, raw_path: str) -> Path | None:
     return None
 
 
-def is_remote_url(value: str) -> bool:
+def is_prohibited_runtime_url(tag: str, attr: str, value: str) -> bool:
+    if value.startswith("//"):
+        return True
     parsed = urlparse(value)
-    return parsed.scheme.lower() in {"http", "https"} or value.startswith("//")
+    scheme = parsed.scheme.casefold()
+    if not scheme:
+        return False
+    if scheme == "data" and (tag, attr) in {
+        ("img", "src"),
+        ("source", "src"),
+        ("video", "poster"),
+    }:
+        return False
+    return True
 
 
 def validate_document_basics(
@@ -272,11 +370,17 @@ def validate_document_basics(
         for attr in runtime_attrs:
             value = node.attrs.get(attr, "")
             candidates = value.split(",") if attr == "srcset" else [value]
-            if any(is_remote_url(candidate.strip().split()[0]) for candidate in candidates if candidate.strip()):
+            if any(
+                is_prohibited_runtime_url(
+                    node.tag, attr, candidate.strip().split()[0]
+                )
+                for candidate in candidates
+                if candidate.strip()
+            ):
                 add_error(
                     errors,
                     page,
-                    f'external runtime resource is prohibited: <{node.tag} {attr}="{value}">',
+                    f'non-local runtime resource is prohibited: <{node.tag} {attr}="{value}">',
                 )
 
     for node in page.nodes:
@@ -308,7 +412,10 @@ def validate_document_basics(
 
 
 def validate_locale_shell(
-    page: Page, expected_locales: list[str], errors: list[str]
+    page: Page,
+    expected_locales: list[str],
+    expected_back_labels: dict[str, str],
+    errors: list[str],
 ) -> None:
     links = page.language_nav_links()
     nav_count = len([node for node in page.nodes if node.has_class("language-nav")])
@@ -391,6 +498,12 @@ def validate_locale_shell(
                 page,
                 f"{locale} section needs one localized back-to-language-list link",
             )
+        elif valid_back_links[0].text_content() != expected_back_labels.get(locale):
+            add_error(
+                errors,
+                page,
+                f"{locale} back-to-language-list label must match localized contract copy",
+            )
 
 
 def direct_list_items(node: Node) -> list[Node]:
@@ -455,13 +568,17 @@ def validate_support(
             node
             for node in section.descendants()
             if node.attrs.get("data-contract") == "no-card-storage"
-            and node.text_content()
         ]
-        if len(disclosures) != 1:
+        expected_copy = NO_CARD_DISCLOSURE_COPY.get(locale)
+        if (
+            len(disclosures) != 1
+            or expected_copy is None
+            or normalized(expected_copy) not in disclosures[0].text_content()
+        ):
             add_error(
                 errors,
                 page,
-                f'{locale} Support section needs one non-empty data-contract="no-card-storage" disclosure',
+                f'{locale} Support section needs one localized data-contract="no-card-storage" disclosure stating that Pixira does not receive or store card/payment details',
             )
 
 
@@ -530,14 +647,20 @@ def validate_terms(
                 f"{locale} Terms section must have exactly 8 h3 headings; found {len(headings)}",
             )
 
-        lists = list(section.descendants("ul"))
-        purchase_lists = [item for item in lists if len(direct_list_items(item)) == 7]
-        if len(purchase_lists) != 1:
-            counts = [len(direct_list_items(item)) for item in lists]
+        purchase_lists = [
+            item
+            for item in section.descendants("ul")
+            if item.attrs.get("data-contract") == "purchase-terms"
+        ]
+        if (
+            len(purchase_lists) != 1
+            or len(direct_list_items(purchase_lists[0])) != 7
+        ):
+            counts = [len(direct_list_items(item)) for item in purchase_lists]
             add_error(
                 errors,
                 page,
-                f"{locale} Terms section needs exactly one 7-item purchase list; found {counts}",
+                f'{locale} Terms section needs exactly one data-contract="purchase-terms" list with 7 direct items; found {counts}',
             )
 
         eula_links = [
@@ -564,10 +687,13 @@ def validate_terms(
     )
     for locale, scope in assertion_scopes.items():
         assert scope is not None
-        text = scope.text_content()
-        for label, pattern in CUSTOM_EULA_ASSERTIONS.items():
-            if pattern.search(text):
-                add_error(errors, page, f"{locale} contains {label}")
+        sentences = re.split(r"(?<=[.!?。！？])|\n+", scope.text_content())
+        for sentence in sentences:
+            if any(pattern.search(sentence) for pattern in NEUTRAL_CUSTOM_EULA_QUALIFIERS):
+                continue
+            for label, pattern in CUSTOM_EULA_ASSERTIONS.items():
+                if pattern.search(sentence):
+                    add_error(errors, page, f"{locale} contains {label}")
 
 
 def validate_stale_claims(page: Page, errors: list[str]) -> None:
@@ -606,9 +732,16 @@ def main() -> int:
     if len(expected_locales) != len(set(expected_locales)):
         add_error(errors, privacy, "Privacy locale navigation contains duplicates")
 
+    if set(BACK_TO_LANGUAGE_LIST_COPY) != set(expected_locales):
+        add_error(errors, privacy, "localized back-link copy does not cover every locale")
+    if set(NO_CARD_DISCLOSURE_COPY) != set(expected_locales):
+        add_error(errors, privacy, "localized no-card disclosure copy does not cover every locale")
+
     for page in pages.values():
         validate_document_basics(page, pages_by_path, errors)
-        validate_locale_shell(page, expected_locales, errors)
+        validate_locale_shell(
+            page, expected_locales, BACK_TO_LANGUAGE_LIST_COPY, errors
+        )
 
     if "support" in pages:
         validate_support(pages["support"], expected_locales, errors)
