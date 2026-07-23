@@ -72,68 +72,9 @@ CSS_URL_FUNCTION_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 CSS_IMPORT_RE = re.compile(r"@import\s+([^;]+)", re.IGNORECASE | re.DOTALL)
-BACK_TO_LANGUAGE_LIST_COPY = {
-    "ko": "언어 목록으로",
-    "en-US": "Back to language list",
-    "el": "Επιστροφή στη λίστα γλωσσών",
-    "nl": "Terug naar de talenlijst",
-    "nb": "Tilbake til språklisten",
-    "da": "Tilbage til sproglisten",
-    "de": "Zurück zur Sprachenliste",
-    "ru": "Вернуться к списку языков",
-    "ro": "Înapoi la lista limbilor",
-    "ms": "Kembali ke senarai bahasa",
-    "vi": "Quay lại danh sách ngôn ngữ",
-    "sv": "Tillbaka till språklistan",
-    "es-MX": "Volver a la lista de idiomas",
-    "ar": "العودة إلى قائمة اللغات",
-    "uk": "Повернутися до списку мов",
-    "it": "Torna all'elenco delle lingue",
-    "id": "Kembali ke daftar bahasa",
-    "ja": "言語一覧に戻る",
-    "zh-Hans": "返回语言列表",
-    "cs": "Zpět na seznam jazyků",
-    "th": "กลับไปยังรายการภาษา",
-    "tr": "Dil listesine dön",
-    "pt-BR": "Voltar à lista de idiomas",
-    "pl": "Wróć do listy języków",
-    "fr-FR": "Revenir à la liste des langues",
-    "fi": "Takaisin kieliluetteloon",
-    "hu": "Vissza a nyelvek listájához",
-    "he": "חזרה לרשימת השפות",
-    "hi": "भाषा सूची पर वापस जाएं",
-}
-NO_CARD_DISCLOSURE_COPY = {
-    "ko": "Pixira는 카드 번호나 결제 수단 정보를 받거나 저장하지 않습니다.",
-    "en-US": "Pixira does not receive or store card numbers or payment-method details.",
-    "el": "Το Pixira δεν λαμβάνει ούτε αποθηκεύει αριθμούς καρτών ή στοιχεία μεθόδου πληρωμής.",
-    "nl": "Pixira ontvangt of bewaart geen kaartnummers of betaalmethodegegevens.",
-    "nb": "Pixira mottar eller lagrer ikke kortnumre eller opplysninger om betalingsmåter.",
-    "da": "Pixira modtager eller gemmer ikke kortnumre eller oplysninger om betalingsmetoder.",
-    "de": "Pixira erhält oder speichert keine Kartennummern oder Angaben zu Zahlungsmethoden.",
-    "ru": "Pixira не получает и не хранит номера карт или сведения о способах оплаты.",
-    "ro": "Pixira nu primește și nu stochează numere de card sau detalii despre metodele de plată.",
-    "ms": "Pixira tidak menerima atau menyimpan nombor kad atau butiran kaedah pembayaran.",
-    "vi": "Pixira không nhận hoặc lưu trữ số thẻ hay thông tin phương thức thanh toán.",
-    "sv": "Pixira tar inte emot eller lagrar kortnummer eller uppgifter om betalningsmetoder.",
-    "es-MX": "Pixira no recibe ni almacena números de tarjeta ni detalles del método de pago.",
-    "ar": "لا يتلقى Pixira أرقام البطاقات أو تفاصيل طرق الدفع ولا يخزنها.",
-    "uk": "Pixira не отримує та не зберігає номери карток або відомості про способи оплати.",
-    "it": "Pixira non riceve né memorizza numeri di carta o dettagli dei metodi di pagamento.",
-    "id": "Pixira tidak menerima atau menyimpan nomor kartu maupun detail metode pembayaran.",
-    "ja": "Pixiraはカード番号や支払方法の詳細を受信または保存しません。",
-    "zh-Hans": "Pixira 不会接收或存储银行卡号或付款方式详情。",
-    "cs": "Pixira nepřijímá ani neukládá čísla karet ani údaje o platebních metodách.",
-    "th": "Pixira ไม่ได้รับหรือจัดเก็บหมายเลขบัตรหรือรายละเอียดวิธีการชำระเงิน",
-    "tr": "Pixira kart numaralarını veya ödeme yöntemi ayrıntılarını almaz ya da saklamaz.",
-    "pt-BR": "A Pixira não recebe nem armazena números de cartão ou detalhes da forma de pagamento.",
-    "pl": "Pixira nie otrzymuje ani nie przechowuje numerów kart ani danych metod płatności.",
-    "fr-FR": "Pixira ne reçoit ni ne stocke les numéros de carte ni les informations sur les moyens de paiement.",
-    "fi": "Pixira ei vastaanota eikä tallenna korttinumeroita tai maksutapatietoja.",
-    "hu": "A Pixira nem fogad és nem tárol kártyaszámokat vagy fizetésimód-adatokat.",
-    "he": "Pixira אינה מקבלת או שומרת מספרי כרטיסים או פרטי אמצעי תשלום.",
-    "hi": "Pixira कार्ड नंबर या भुगतान विधि का विवरण प्राप्त या संग्रहीत नहीं करता है।",
-}
+NO_CARD_CONTRACT_KEY = (
+    "pixira-does-not-receive-or-store-payment-card-details"
+)
 VOID_ELEMENTS = {
     "area",
     "base",
@@ -240,12 +181,24 @@ class DocumentParser(HTMLParser):
         wanted = tag.lower()
         for index in range(len(self.stack) - 1, 0, -1):
             if self.stack[index].tag == wanted:
+                if index != len(self.stack) - 1:
+                    self.parse_errors.append(
+                        f"misnested closing tag </{wanted}>; "
+                        f"expected </{self.stack[-1].tag}>"
+                    )
                 del self.stack[index:]
                 return
         self.parse_errors.append(f"unexpected closing tag </{wanted}>")
 
     def handle_data(self, data: str) -> None:
         self.stack[-1].children.append(data)
+
+    def close(self) -> None:
+        super().close()
+        if len(self.stack) > 1:
+            unclosed = ", ".join(f"<{node.tag}>" for node in self.stack[1:])
+            self.parse_errors.append(f"unclosed tags at end of document: {unclosed}")
+            self.stack = [self.root]
 
 
 class Page:
@@ -304,20 +257,24 @@ def add_error(errors: list[str], page: Page, message: str) -> None:
 
 def resolve_local_path(current: Path, raw_path: str) -> Path | None:
     path = unquote(raw_path)
+    if path.startswith("/"):
+        return None
     if path in {"", "."}:
-        return current
-    candidate = ROOT / path.lstrip("/") if path.startswith("/") else current.parent / path
+        return current.resolve()
+    candidate = current.parent / path
     candidates = [candidate]
     if candidate.suffix == "":
         candidates.extend([candidate.with_suffix(".html"), candidate / "index.html"])
+    root = ROOT.resolve()
     for possible in candidates:
-        if possible.exists():
-            return possible.resolve()
+        resolved = possible.resolve()
+        if resolved.is_relative_to(root) and resolved.exists():
+            return resolved
     return None
 
 
 def is_prohibited_runtime_url(tag: str, attr: str, value: str) -> bool:
-    if value.startswith("//"):
+    if value.startswith("/"):
         return True
     parsed = urlparse(value)
     scheme = parsed.scheme.casefold()
@@ -344,7 +301,7 @@ def css_url_value(raw_value: str) -> str:
 
 
 def is_prohibited_css_url(value: str, *, allow_data_image: bool) -> bool:
-    if value.startswith("//"):
+    if value.startswith("/"):
         return True
     scheme = urlparse(value).scheme.casefold()
     if not scheme:
@@ -358,30 +315,131 @@ def is_prohibited_css_url(value: str, *, allow_data_image: bool) -> bool:
     return True
 
 
-def prohibited_css_runtime_urls(css: str) -> list[str]:
-    prohibited: list[str] = []
-
+def css_import_urls(css: str) -> list[str]:
+    imports: list[str] = []
     for match in CSS_IMPORT_RE.finditer(css):
         import_target = match.group(1).strip()
         url_match = CSS_URL_FUNCTION_RE.search(import_target)
         if url_match:
             value = css_url_value(url_match.group(2) or url_match.group(3) or "")
         else:
-            value = css_url_value(import_target.split()[0])
-        if value and is_prohibited_css_url(value, allow_data_image=False):
-            prohibited.append(value)
+            quoted = re.match(r"""(["'])(.*?)\1""", import_target, re.DOTALL)
+            value = (
+                quoted.group(2).strip()
+                if quoted
+                else css_url_value(import_target.split()[0])
+            )
+        if value:
+            imports.append(value)
+    return list(dict.fromkeys(imports))
 
+
+def css_function_urls(css: str) -> list[str]:
+    urls: list[str] = []
     for match in CSS_URL_FUNCTION_RE.finditer(css):
         value = css_url_value(match.group(2) or match.group(3) or "")
-        if value and is_prohibited_css_url(value, allow_data_image=True):
-            prohibited.append(value)
+        if value:
+            urls.append(value)
+    return list(dict.fromkeys(urls))
 
-    return list(dict.fromkeys(prohibited))
+
+def resolve_css_path(current: Path, raw_url: str) -> Path | None:
+    parsed = urlparse(raw_url)
+    path = unquote(parsed.path)
+    if not path or path.startswith("/"):
+        return None
+    resolved = (current.parent / path).resolve()
+    if not resolved.is_relative_to(ROOT.resolve()) or not resolved.is_file():
+        return None
+    return resolved
+
+
+def validate_css_source(
+    css: str,
+    current: Path,
+    source: str,
+    page: Page,
+    errors: list[str],
+    visited_stylesheets: set[Path],
+) -> None:
+    imports = css_import_urls(css)
+    for import_url in imports:
+        if is_prohibited_css_url(import_url, allow_data_image=False):
+            add_error(
+                errors,
+                page,
+                f'non-local CSS import is prohibited in {source}: "{import_url}"',
+            )
+            continue
+        imported_path = resolve_css_path(current, import_url)
+        if imported_path is None:
+            add_error(
+                errors,
+                page,
+                f'CSS import does not resolve in {source}: "{import_url}"',
+            )
+            continue
+        validate_local_stylesheet(
+            imported_path, page, errors, visited_stylesheets
+        )
+
+    imported_urls = set(imports)
+    for asset_url in css_function_urls(css):
+        if asset_url in imported_urls:
+            continue
+        if is_prohibited_css_url(asset_url, allow_data_image=True):
+            add_error(
+                errors,
+                page,
+                f'non-local CSS runtime resource is prohibited in {source}: "{asset_url}"',
+            )
+            continue
+        if asset_url.casefold().startswith("data:image/"):
+            continue
+        parsed = urlparse(asset_url)
+        if not parsed.path and parsed.fragment:
+            continue
+        if resolve_css_path(current, asset_url) is None:
+            add_error(
+                errors,
+                page,
+                f'CSS asset does not resolve in {source}: "{asset_url}"',
+            )
+
+
+def validate_local_stylesheet(
+    stylesheet_path: Path,
+    page: Page,
+    errors: list[str],
+    visited_stylesheets: set[Path],
+) -> None:
+    resolved = stylesheet_path.resolve()
+    if resolved in visited_stylesheets:
+        return
+    visited_stylesheets.add(resolved)
+    try:
+        stylesheet = resolved.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        add_error(
+            errors,
+            page,
+            f'local stylesheet cannot be read as UTF-8: "{resolved}"',
+        )
+        return
+    validate_css_source(
+        stylesheet,
+        resolved,
+        f'linked stylesheet "{resolved.relative_to(ROOT.resolve())}"',
+        page,
+        errors,
+        visited_stylesheets,
+    )
 
 
 def validate_document_basics(
     page: Page, pages_by_path: dict[Path, Page], errors: list[str]
 ) -> None:
+    visited_stylesheets: set[Path] = set()
     for parse_error in page.parse_errors:
         add_error(errors, page, parse_error)
 
@@ -411,12 +469,14 @@ def validate_document_basics(
         if "style" in node.attrs:
             css_sources.append((f"<{node.tag} style>", node.attrs["style"]))
         for source, css in css_sources:
-            for runtime_url in prohibited_css_runtime_urls(css):
-                add_error(
-                    errors,
-                    page,
-                    f'non-local CSS runtime resource is prohibited in {source}: "{runtime_url}"',
-                )
+            validate_css_source(
+                css,
+                page.path,
+                source,
+                page,
+                errors,
+                visited_stylesheets,
+            )
 
         if node.tag == "meta":
             http_equiv = node.attrs.get("http-equiv", "").casefold()
@@ -456,21 +516,12 @@ def validate_document_basics(
             ):
                 stylesheet_path = resolve_local_path(page.path, parsed_href.path)
                 if stylesheet_path is not None:
-                    try:
-                        stylesheet = stylesheet_path.read_text(encoding="utf-8")
-                    except (OSError, UnicodeDecodeError):
-                        add_error(
-                            errors,
-                            page,
-                            f'local stylesheet cannot be read as UTF-8: "{href}"',
-                        )
-                    else:
-                        for runtime_url in prohibited_css_runtime_urls(stylesheet):
-                            add_error(
-                                errors,
-                                page,
-                                f'linked stylesheet "{href}" contains prohibited non-local CSS runtime resource: "{runtime_url}"',
-                            )
+                    validate_local_stylesheet(
+                        stylesheet_path,
+                        page,
+                        errors,
+                        visited_stylesheets,
+                    )
 
     for node in page.nodes:
         href = node.attrs.get("href")
@@ -485,6 +536,13 @@ def validate_document_basics(
         if parsed.scheme or href.startswith("//"):
             continue
 
+        if parsed.path.startswith("/"):
+            add_error(
+                errors,
+                page,
+                f'root-relative link is invalid; use a repository-relative link: "{href}"',
+            )
+            continue
         target_path = resolve_local_path(page.path, parsed.path)
         if target_path is None:
             add_error(errors, page, f'local link does not resolve: "{href}"')
@@ -498,6 +556,33 @@ def validate_document_basics(
                     target_page = None
             if target_page is None or parsed.fragment not in target_page.id_nodes:
                 add_error(errors, page, f'fragment target does not resolve: "{href}"')
+
+
+def localized_back_labels(
+    privacy: Page, expected_locales: list[str], errors: list[str]
+) -> dict[str, str]:
+    labels: dict[str, str] = {}
+    for locale in expected_locales:
+        section = privacy.section_for_locale(locale)
+        if section is None:
+            continue
+        links = [
+            anchor
+            for block in section.descendants()
+            if block.has_class("back-to-languages")
+            for anchor in block.descendants("a")
+            if anchor.attrs.get("href") == f"#{LANGUAGE_LIST_ID}"
+            and anchor.text_content()
+        ]
+        if len(links) == 1:
+            labels[locale] = links[0].text_content()
+        else:
+            add_error(
+                errors,
+                privacy,
+                f"{locale} Privacy section cannot define one localized back-link label",
+            )
+    return labels
 
 
 def validate_locale_shell(
@@ -658,16 +743,15 @@ def validate_support(
             for node in section.descendants()
             if node.attrs.get("data-contract") == "no-card-storage"
         ]
-        expected_copy = NO_CARD_DISCLOSURE_COPY.get(locale)
         if (
             len(disclosures) != 1
-            or expected_copy is None
-            or normalized(expected_copy) not in disclosures[0].text_content()
+            or disclosures[0].attrs.get("data-contract-key")
+            != NO_CARD_CONTRACT_KEY
         ):
             add_error(
                 errors,
                 page,
-                f'{locale} Support section needs one localized data-contract="no-card-storage" disclosure stating that Pixira does not receive or store card/payment details',
+                f'{locale} Support section needs one data-contract="no-card-storage" disclosure with data-contract-key="{NO_CARD_CONTRACT_KEY}"',
             )
         elif any(
             pattern.search(disclosures[0].text_content())
@@ -827,15 +911,13 @@ def main() -> int:
     if len(expected_locales) != len(set(expected_locales)):
         add_error(errors, privacy, "Privacy locale navigation contains duplicates")
 
-    if set(BACK_TO_LANGUAGE_LIST_COPY) != set(expected_locales):
-        add_error(errors, privacy, "localized back-link copy does not cover every locale")
-    if set(NO_CARD_DISCLOSURE_COPY) != set(expected_locales):
-        add_error(errors, privacy, "localized no-card disclosure copy does not cover every locale")
-
+    expected_back_labels = localized_back_labels(
+        privacy, expected_locales, errors
+    )
     for page in pages.values():
         validate_document_basics(page, pages_by_path, errors)
         validate_locale_shell(
-            page, expected_locales, BACK_TO_LANGUAGE_LIST_COPY, errors
+            page, expected_locales, expected_back_labels, errors
         )
 
     if "support" in pages:
