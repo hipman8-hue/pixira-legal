@@ -25,6 +25,15 @@ LANGUAGE_LIST_ID = "language-list"
 STANDARD_EULA_URL = (
     "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
 )
+PURCHASE_TERM_KEYS = (
+    "free-tier",
+    "pro-products",
+    "apple-display",
+    "renewal-cancellation",
+    "trial",
+    "restore",
+    "refunds",
+)
 CONTACT_EMAIL = "hipman8@gmail.com"
 EMAIL_RE = re.compile(r"^[^@\s/?#]+@[^@\s/?#]+\.[^@\s/?#]+$")
 STALE_CLAIMS = {
@@ -950,6 +959,16 @@ def validate_terms(
                 errors,
                 page,
                 f'{locale} Terms section needs exactly one data-contract="purchase-terms" list with 7 direct items; found {counts}',
+            )
+        elif tuple(
+            item.attrs.get("data-contract-key", "")
+            for item in direct_list_items(purchase_lists[0])
+        ) != PURCHASE_TERM_KEYS:
+            add_error(
+                errors,
+                page,
+                f"{locale} Terms purchase list must use the ordered "
+                f"data-contract-key values {list(PURCHASE_TERM_KEYS)}",
             )
 
         eula_links = [

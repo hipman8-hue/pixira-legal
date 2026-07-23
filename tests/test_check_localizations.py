@@ -144,9 +144,21 @@ class LocalizationCheckerTests(unittest.TestCase):
                 + "</section>"
             )
             headings = "".join(f"<h3>Heading {index}</h3>" for index in range(8))
+            purchase_keys = (
+                "free-tier",
+                "pro-products",
+                "apple-display",
+                "renewal-cancellation",
+                "trial",
+                "restore",
+                "refunds",
+            )
             purchase_terms = (
                 '<ul data-contract="purchase-terms">'
-                + "".join(f"<li>Clause {index}</li>" for index in range(7))
+                + "".join(
+                    f'<li data-contract-key="{key}">Clause {index}</li>'
+                    for index, key in enumerate(purchase_keys)
+                )
                 + "</ul>"
             )
             terms_sections.append(
@@ -302,6 +314,21 @@ class LocalizationCheckerTests(unittest.TestCase):
         pattern = checker.STALE_CLAIMS["3일"]
         self.assertIsNone(pattern.search("시행일: 2026년 7월 23일"))
         self.assertIsNotNone(pattern.search("첫 3일 무료 체험"))
+
+    def test_terms_requires_ordered_purchase_contract_keys(self) -> None:
+        terms_path = checker.PAGE_PATHS["terms"]
+        source = terms_path.read_text(encoding="utf-8")
+        terms_path.write_text(
+            source.replace(
+                'data-contract-key="free-tier"',
+                'data-contract-key="wrong-key"',
+                1,
+            ),
+            encoding="utf-8",
+        )
+        status, output = self.run_checker("terms")
+        self.assertEqual(status, 1)
+        self.assertIn("ordered data-contract-key values", output)
 
     def test_support_requires_in_app_restore_action_contract(self) -> None:
         self.write_valid_pages(support_restore_marker=None)
