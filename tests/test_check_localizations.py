@@ -102,10 +102,12 @@ class LocalizationCheckerTests(unittest.TestCase):
         support_marker: str = NO_CARD_KEY,
         support_restore_marker: str | None = RESTORE_ACTION_KEY,
         support_restore_labels: dict[str, str] | None = None,
+        terms_restore_labels: dict[str, str] | None = None,
         terms_extra: dict[str, str] | None = None,
     ) -> None:
         terms_extra = terms_extra or {}
         support_restore_labels = support_restore_labels or self.restore_labels
+        terms_restore_labels = terms_restore_labels or self.restore_labels
         privacy_sections: list[str] = []
         support_sections: list[str] = []
         terms_sections: list[str] = []
@@ -156,7 +158,15 @@ class LocalizationCheckerTests(unittest.TestCase):
             purchase_terms = (
                 '<ul data-contract="purchase-terms">'
                 + "".join(
-                    f'<li data-contract-key="{key}">Clause {index}</li>'
+                    f'<li data-contract-key="{key}">Clause {index}'
+                    + (
+                        '<span data-contract="restore-action-label">'
+                        + terms_restore_labels[locale]
+                        + "</span>"
+                        if key == "restore"
+                        else ""
+                    )
+                    + "</li>"
                     for index, key in enumerate(purchase_keys)
                 )
                 + "</ul>"
@@ -329,6 +339,35 @@ class LocalizationCheckerTests(unittest.TestCase):
         status, output = self.run_checker("terms")
         self.assertEqual(status, 1)
         self.assertIn("ordered data-contract-key values", output)
+
+    def test_terms_requires_exact_canonical_restore_action_label(self) -> None:
+        labels = dict(self.restore_labels)
+        labels["ko"] = "복원 구매"
+        self.write_valid_pages(terms_restore_labels=labels)
+        status, output = self.run_checker("terms")
+        self.assertEqual(status, 1)
+        self.assertIn("canonical localized label", output)
+
+        for replacement in (
+            "구매 복원",
+            '<span data-contract="restore-action-label" hidden>구매 복원</span>',
+        ):
+            with self.subTest(replacement=replacement):
+                self.write_valid_pages()
+                terms_path = checker.PAGE_PATHS["terms"]
+                source = terms_path.read_text(encoding="utf-8")
+                terms_path.write_text(
+                    source.replace(
+                        '<span data-contract="restore-action-label">'
+                        "구매 복원</span>",
+                        replacement,
+                        1,
+                    ),
+                    encoding="utf-8",
+                )
+                status, output = self.run_checker("terms")
+                self.assertEqual(status, 1)
+                self.assertIn("canonical localized label", output)
 
     def test_support_requires_in_app_restore_action_contract(self) -> None:
         self.write_valid_pages(support_restore_marker=None)

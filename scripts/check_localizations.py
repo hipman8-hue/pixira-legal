@@ -929,6 +929,7 @@ def validate_terms(
     page: Page,
     privacy: Page,
     expected_locales: list[str],
+    restore_action_labels: dict[str, str],
     errors: list[str],
 ) -> None:
     for locale in expected_locales:
@@ -969,6 +970,58 @@ def validate_terms(
                 page,
                 f"{locale} Terms purchase list must use the ordered "
                 f"data-contract-key values {list(PURCHASE_TERM_KEYS)}",
+            )
+
+        restore_items = [
+            item
+            for purchase_list in purchase_lists
+            for item in direct_list_items(purchase_list)
+            if item.attrs.get("data-contract-key") == "restore"
+        ]
+        restore_label_spans = [
+            node
+            for node in section.descendants("span")
+            if node.attrs.get("data-contract") == "restore-action-label"
+        ]
+        restore_item_spans = (
+            [
+                node
+                for node in restore_items[0].descendants("span")
+                if node.attrs.get("data-contract") == "restore-action-label"
+            ]
+            if len(restore_items) == 1
+            else []
+        )
+        expected_restore_label = restore_action_labels.get(locale)
+        restore_label_style = (
+            restore_label_spans[0]
+            .attrs.get("style", "")
+            .replace(" ", "")
+            .casefold()
+            if len(restore_label_spans) == 1
+            else ""
+        )
+        restore_label_is_visible = (
+            len(restore_label_spans) == 1
+            and "hidden" not in restore_label_spans[0].attrs
+            and restore_label_spans[0].attrs.get("aria-hidden", "").casefold()
+            != "true"
+            and "display:none" not in restore_label_style
+            and "visibility:hidden" not in restore_label_style
+        )
+        if (
+            len(restore_items) != 1
+            or len(restore_label_spans) != 1
+            or restore_item_spans != restore_label_spans
+            or not restore_label_is_visible
+            or expected_restore_label is None
+            or restore_label_spans[0].text_content() != expected_restore_label
+        ):
+            add_error(
+                errors,
+                page,
+                f"{locale} Terms restore purchase item needs exactly one visible span "
+                'data-contract="restore-action-label" matching the canonical localized label',
             )
 
         eula_links = [
@@ -1046,16 +1099,26 @@ def main() -> int:
             page, expected_locales, expected_back_labels, errors
         )
 
-    if "support" in pages:
+    restore_action_labels: dict[str, str] = {}
+    if "support" in pages or "terms" in pages:
+        contract_page = pages.get("support") or pages["terms"]
         restore_action_labels = load_restore_action_labels(
-            pages["support"], expected_locales, errors
+            contract_page, expected_locales, errors
         )
+
+    if "support" in pages:
         validate_support(
             pages["support"], expected_locales, restore_action_labels, errors
         )
         validate_stale_claims(pages["support"], errors)
     if "terms" in pages:
-        validate_terms(pages["terms"], privacy, expected_locales, errors)
+        validate_terms(
+            pages["terms"],
+            privacy,
+            expected_locales,
+            restore_action_labels,
+            errors,
+        )
         validate_stale_claims(pages["terms"], errors)
 
     if errors:

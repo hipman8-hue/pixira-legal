@@ -99,6 +99,34 @@ current Stage A artifact.
 
 ## Reproducible 29-locale review table
 
+### Restore-label and grammar follow-up
+
+Implementer follow-up reviewed on 2026-07-23:
+
+- Every Terms restore clause now contains exactly one visible
+  `<span data-contract="restore-action-label">` inside its
+  `li[data-contract-key="restore"]`. All 29 span values exactly match
+  `contracts/restore_action_labels.json`, whose recorded source is the app's
+  `Localizable.xcstrings`.
+- The visible action labels were corrected to the canonical app strings where
+  the draft differed, including Romanian `Restaurează achizițiile`, Swedish
+  `Återställ köp`, Thai `กู้คืนรายการซื้อ`, Turkish
+  `Satın alımları geri yükle`, Brazilian Portuguese `Restaurar compras`, and
+  Polish `Przywróć zakupy`.
+- Finnish was rechecked after replacing the four Apple Account phrases with
+  `Apple-tilisi kautta`, `Apple-tilisi tilausasetuksissa`,
+  `kirjautumalla samalle Apple-tilille, jota käytit ostoon`, and
+  `Apple-tilisi suojaamisesta` — **PASS**.
+- Hungarian was rechecked after replacing the four Apple Account phrases with
+  `az Apple-fiókján keresztül`,
+  `az Apple-fiókja előfizetési beállításaiban`,
+  `a vásárláshoz használt Apple-fiókba bejelentkezve`, and
+  `Apple-fiókja biztonságáért`; the canonical action remains
+  `Vásárlások visszaállítása` — **PASS**.
+- Checker mutation coverage now rejects a wrong, absent, or hidden Terms
+  restore-action label. The 29-row implementer statuses below include this
+  follow-up; independent review remains pending.
+
 Terms pointer keys (17 meanings): `A` acceptance; `L` Apple license; `F` free
 tier; `M` monthly; `Y` yearly; `LT` lifetime; `P` Apple-displayed
 payment/price/currency; `R` renewal/cancellation; `T` dynamic trial; `RS`
