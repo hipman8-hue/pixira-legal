@@ -189,7 +189,7 @@ git commit -m "feat: localize corrected Pixira terms in 29 languages"
 - Verify: `terms.html`
 - Verify: `style.css`
 
-- [ ] **Step 1: Run structural and repository checks**
+- [x] **Step 1: Run structural and repository checks**
 
 ```bash
 python3 scripts/check_localizations.py
@@ -199,7 +199,7 @@ git status --short
 
 Expected: verifier exits 0, no whitespace errors, only intentional commits.
 
-- [ ] **Step 2: Run eight current designer-eye browser passes**
+- [x] **Step 2: Run eight current designer-eye browser passes**
 
 Serve the worktree locally, capture desktop and 320 CSS-pixel screenshots for
 Support and Terms. Save current-build evidence for eight distinct passes:
@@ -218,18 +218,18 @@ Computed language-link width and height must each be at least 44 CSS pixels.
 No design or release PASS is allowed with fewer than all eight evidence-backed
 passes.
 
-- [ ] **Step 3: Complete the 29-row semantic matrix**
+- [x] **Step 3: Complete the 29-row semantic matrix**
 
 For every Terms locale, verify and sign off the clause-matrix row. For every
 Support locale, verify and sign off the seven source topics. Record reviewer,
 date, result, and evidence pointer for each row.
 
-- [ ] **Step 4: Run spec and quality reviews**
+- [x] **Step 4: Run spec and quality reviews**
 
 Dispatch a spec-compliance reviewer, then a code/content-quality reviewer.
 Resolve all findings and re-run the verifier after every correction.
 
-- [ ] **Step 5: Review current App Store Connect evidence**
+- [x] **Step 5: Review current App Store Connect evidence**
 
 Inspect the newest available App Store Connect evidence for
 `com.pixira.pro.monthly`, `com.pixira.pro.yearly`, and
@@ -239,7 +239,7 @@ currency, eligibility, or custom-EULA state. An unproven dynamic value is a
 publication pass only when the copy delegates it to the value Apple displays at
 purchase time; a contradictory product type or SKU is a release blocker.
 
-- [ ] **Step 6: Commit review fixes**
+- [x] **Step 6: Commit review fixes**
 
 ```bash
 git add support.html terms.html style.css scripts/check_localizations.py
