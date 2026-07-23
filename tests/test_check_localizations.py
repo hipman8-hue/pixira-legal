@@ -298,6 +298,11 @@ class LocalizationCheckerTests(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertIn("data-contract-key", output)
 
+    def test_korean_effective_date_does_not_match_three_day_trial(self) -> None:
+        pattern = checker.STALE_CLAIMS["3일"]
+        self.assertIsNone(pattern.search("시행일: 2026년 7월 23일"))
+        self.assertIsNotNone(pattern.search("첫 3일 무료 체험"))
+
     def test_support_requires_in_app_restore_action_contract(self) -> None:
         self.write_valid_pages(support_restore_marker=None)
         status, output = self.run_checker("support")

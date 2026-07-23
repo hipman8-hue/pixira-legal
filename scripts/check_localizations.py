@@ -29,7 +29,7 @@ CONTACT_EMAIL = "hipman8@gmail.com"
 EMAIL_RE = re.compile(r"^[^@\s/?#]+@[^@\s/?#]+\.[^@\s/?#]+$")
 STALE_CLAIMS = {
     "3-day": re.compile(r"\b3[\s-]*day\b", re.IGNORECASE),
-    "3일": re.compile(r"3\s*일"),
+    "3일": re.compile(r"(?<!\d)3\s*일"),
     "6 default": re.compile(r"\b(?:6\s+default|default\s+6)\b", re.IGNORECASE),
     "기본 6개": re.compile(r"기본\s*6\s*개"),
     "individual bodies": re.compile(r"\bindividual\s+bodies\b", re.IGNORECASE),
